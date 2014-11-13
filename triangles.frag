@@ -1,9 +1,18 @@
 #version 330 core
 
-out vec4 f_color;
-uniform vec4 uni_color;
+in vec2 v_texcoord;
 
-void main()
+layout (location = 0) out vec4 color;
+
+uniform sampler2D tex;
+uniform vec4 uni_color;
+uniform bool uni_is_textured = false;
+
+void main(void)
 {
-    f_color = uni_color;
+   if (uni_is_textured) {
+       color = texture(tex, v_texcoord) * uni_color;
+   } else {
+       color = uni_color;
+   }
 }
