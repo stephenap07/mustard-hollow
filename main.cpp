@@ -19,7 +19,7 @@
 #include <glm/gtc/matrix_access.hpp> 
 
 
-#include "defer.hpp"
+#include "scope_exit.hpp"
 
 using std::vector;
 
@@ -46,7 +46,7 @@ struct VertexBuffer {
 };
 
 enum class UniType {
-    k1i,
+    k1i = 0,
     k4fv,
     k2fv,
     kMatrix4fv,
@@ -66,18 +66,16 @@ VertexBuffer CreateQuad(const GLuint program);
 void DrawQuad(const VertexBuffer &buffer);
 
 /* Uniform handling functions */
-void SetUniform(GLuint program, UniType type, const char *name, GLsizei count, GLvoid *data);
+void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data);
 
 int main(int argc, char *argv[])
 {
     RenderContext context;
-    /** TODO: Destructors v.s. defer */
-    auto defr_context = defer([&context] {
-        SDL_GL_DeleteContext(context.gl_context);
-        SDL_DestroyWindow(context.window);
-    });
-    auto defr_sdl_clean = defer(SDL_Quit);
-    auto defr_sdlimg_clean = defer(IMG_Quit);
+
+    SCOPE_EXIT(SDL_GL_DeleteContext(context.gl_context););
+    SCOPE_EXIT(SDL_DestroyWindow(context.window));
+    SCOPE_EXIT(IMG_Quit());
+    SCOPE_EXIT(SDL_Quit());
 
     Init(&context, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -89,9 +87,10 @@ int main(int argc, char *argv[])
     };    
     const GLuint program = CreateProgram(shaders);
 
-    glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     glm::mat4 model = glm::mat4(1.0f);
-    SetUniform(program, UniType::kMatrix4fv, "uni_color", 1, glm::value_ptr(color));
+    model = glm::scale(model, glm::vec3(0.5f));
+    SetUniform(program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
     SetUniform(program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
 
     VertexBuffer buffer = CreateQuad(program);
@@ -168,8 +167,8 @@ const GLuint CreateShader(const char *filename, const GLenum target)
     GLchar *content = nullptr;
     long length = 0;
 
-    auto defr1 = defer(std::fclose, file_ptr);
-    auto defr2 = defer([&content]{ if (content) delete [] content; });
+    SCOPE_EXIT(std::fclose(file_ptr));
+    SCOPE_EXIT(delete [] content);
 
     if (!file_ptr) {
         std::perror("fopen");
@@ -198,7 +197,7 @@ const GLuint CreateShader(const char *filename, const GLenum target)
         GLint info_log_len;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_len);
         GLchar *str_info_log = new GLchar[info_log_len + 1];
-        auto defr3 = defer([&str_info_log]{ if (str_info_log) delete [] str_info_log; });
+        SCOPE_EXIT(if (str_info_log) delete [] str_info_log);
 
         glGetShaderInfoLog(shader, info_log_len, NULL, str_info_log);
 
@@ -235,7 +234,7 @@ const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos)
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
 
         GLchar *str_info_log = new GLchar[info_log_length + 1];
-        auto defr3 = defer([&str_info_log]{ if (str_info_log) delete [] str_info_log; });
+        SCOPE_EXIT(if (str_info_log) delete [] str_info_log);
 
         glGetProgramInfoLog(program, info_log_length, NULL, str_info_log);
         fprintf(stderr, "Linker failure: %s\n", str_info_log);
@@ -291,7 +290,7 @@ void DrawQuad(const VertexBuffer &buffer)
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
 }
 
-void SetUniform(GLuint program, UniType type, const char *name, GLsizei count, GLvoid *data)
+void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data)
 {
     glUseProgram(program);
 
