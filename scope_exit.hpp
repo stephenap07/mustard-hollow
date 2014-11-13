@@ -3,6 +3,7 @@
 
 /**
  * Scope Exit code from http://the-witness.net/news/2012/11/scopeexit-in-c11/
+ * TODO: This v.s. unique_ptr
  */
 
 template <typename F>

@@ -24,8 +24,8 @@
 using std::vector;
 
 const char *WINDOW_TITLE = "Mustard Hollow v0.0.1";
-const float SCREEN_WIDTH = 1280;
-const float SCREEN_HEIGHT = 720;
+const float SCREEN_WIDTH = 640;
+const float SCREEN_HEIGHT = 640;
 
 struct RenderContext {
     SDL_Window *window;
@@ -38,6 +38,11 @@ struct ShaderInfo {
     GLuint shader;
 };
 
+struct TextureInfo {
+    float w, h;
+    GLuint texture;
+};
+
 struct VertexBuffer {
     GLuint program;
     GLuint vao;
@@ -45,17 +50,22 @@ struct VertexBuffer {
     GLuint ebo;
 };
 
+struct Sprite {
+    VertexBuffer vbuffer;
+    TextureInfo tinfo;
+};
+
 enum class UniType {
     k1i = 0,
     k4fv,
     k2fv,
     kMatrix4fv,
-    kMatrix3x4fv,
+    kMatrix3x4fv
 };
 
 
 /* System initialization */
-void Init(RenderContext *, const float screen_width, const float screen_height);
+void Init(RenderContext *context, const float screen_width, const float screen_height);
 
 /* Shader Creation */
 const GLuint CreateShader(const char *filename, const GLenum target);
@@ -67,6 +77,14 @@ void DrawQuad(const VertexBuffer &buffer);
 
 /* Uniform handling functions */
 void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data);
+
+/* Texture loading */
+TextureInfo CreateTexture(const char *filename, GLenum target);
+GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target);
+
+/* Error Handling */
+void HandleGLError(GLenum error);
+
 
 int main(int argc, char *argv[])
 {
@@ -88,12 +106,34 @@ int main(int argc, char *argv[])
     const GLuint program = CreateProgram(shaders);
 
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.5f));
     SetUniform(program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
+
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(16.0f / (640/2.0f)));
     SetUniform(program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
 
+    GLint is_textured = 1;
+    SetUniform(program, UniType::k1i, "uni_is_textured", 1, (GLvoid*)&is_textured);
+
+    TextureInfo tex_info = CreateTexture("smw_ground.png", GL_TEXTURE_2D);
+    SCOPE_EXIT(glDeleteTextures(1, &tex_info.texture));
+
+    int x = 137, y = 99;
+    int u = 16, v = 16;
+    glm::vec4 texture_xy_uv = glm::vec4(x / tex_info.w, y / tex_info.h, u / tex_info.w, v / tex_info.h);
+    SetUniform(program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(texture_xy_uv));
+
+    glBindTexture(GL_TEXTURE_2D, tex_info.texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     VertexBuffer buffer = CreateQuad(program);
+
+    Sprite sprite;
+    sprite.vbuffer = buffer;
+    sprite.tinfo = tex_info;
 
     bool do_quit = false;
     while (!do_quit) {
@@ -118,6 +158,7 @@ int main(int argc, char *argv[])
         glDepthFunc(GL_LEQUAL);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
+        glBindTexture(GL_TEXTURE_2D, tex_info.texture);
         DrawQuad(buffer);
 
         glFlush();
@@ -144,6 +185,10 @@ void Init(RenderContext *context, const float screen_width, const float screen_h
         screen_width, screen_height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
+    if (context->window == nullptr) {
+        fprintf(stderr, "Failed to create SDL_Window: %s\n", SDL_GetError());
+    }
+
     context->gl_context = SDL_GL_CreateContext(context->window);
     if (context->gl_context == nullptr) {
         fprintf(stderr, "SDL_GL_CreateContext: FATAL - Failed to created GL context\n");
@@ -152,11 +197,13 @@ void Init(RenderContext *context, const float screen_width, const float screen_h
     glewExperimental = GL_TRUE;
     GLenum glew_error = glewInit();
 
+    /* We can ignore this error https://www.opengl.org/wiki/OpenGL_Loading_Library */
+    glGetError();
+
     if (glew_error != GLEW_OK) {
         fprintf(stderr, "glewInit failed, aborting\n");
     }
 }
-
 
 /**
  * Compile the shader and return a GLuint
@@ -246,38 +293,43 @@ const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos)
 VertexBuffer CreateQuad(const GLuint program)
 {
     VertexBuffer buffer;
-    GLfloat vert_quad[] = {
-        -1.0f,  1.0f, -1.0f, // Top Left
-        1.0f, -1.0f, 1.0f,   // Bottom Right
-        -1.0f, -1.0f, 1.0f,  // Bottom Left
-        1.0f,  1.0f, -1.0f   // Top Right
+
+    struct TextureVertex {
+        GLfloat x, y, z, s, t;
     };
 
-    GLushort vert_indices[] = {
-        0, 2, 3, 1
+    TextureVertex vert_quad[] = {
+        // Position          // Texture Coordinates
+        {-1.0f,  1.0f, 0.0f, 0.0f, 0.0f},
+        { 1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
+        {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
+        { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
     };
+
+    GLushort vert_indices[] = { 0, 2, 3, 1 };
 
     buffer.program = program;
 
-    glGenBuffers(1, &(buffer.ebo));
+    glGenBuffers(1, &buffer.ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vert_indices), vert_indices,
-            GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &(buffer.vao));
-    glBindVertexArray(buffer.vao);
-    glGenBuffers(1, &(buffer.vbo));
-    glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vert_quad), vert_quad, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vert_indices), vert_indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenVertexArrays(1, &buffer.vao);
+    glBindVertexArray(buffer.vao);
+
+    glGenBuffers(1, &buffer.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vert_quad), vert_quad, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), nullptr);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (GLvoid*)(3 * sizeof(GLfloat)));
+
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
     return buffer;
 }
 
@@ -285,15 +337,23 @@ void DrawQuad(const VertexBuffer &buffer)
 {
     glUseProgram(buffer.program);
     glBindVertexArray(buffer.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
 
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, nullptr);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glUseProgram(0);
 }
 
 void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data)
 {
     glUseProgram(program);
 
+    /* Clear Errors */
+    glGetError();
     GLint uniform = glGetUniformLocation(program, name);
     GLenum error = glGetError();
 
@@ -302,7 +362,7 @@ void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count,
     }
 
     if (uniform == -1) {
-        fprintf(stderr, "Invalid uniform type (%d) for shader id\n", program);
+        fprintf(stderr, "Invalid uniform type (%d) uniform (%s) for shader id\n", program, name);
     } else {
         switch (type) {
             case UniType::k1i:
@@ -325,4 +385,107 @@ void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count,
                 break;
         }
     }
+}
+
+GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
+{
+	assert(surface != nullptr);
+
+	GLuint texture_id;
+	glGenTextures(1, &texture_id);
+	glBindTexture(target, texture_id);
+
+	GLenum format;
+    GLint internal_format = GL_RGB8;
+	switch (surface->format->BytesPerPixel) {
+        case 1:
+            format = (surface->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
+            break;
+		case 4:
+			format = (surface->format->Rmask == 0x000000ff) ? GL_RGBA : GL_BGRA;
+            internal_format = GL_RGBA8;
+			break;
+		case 3:
+			format = (surface->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
+			break;
+		default:
+            fprintf(stderr, "Invalid format for surface: %d\n", surface->format->BytesPerPixel);
+			assert(false);
+	}
+
+    switch(target) {
+        case GL_TEXTURE_1D:
+            glTexImage1D(
+                target,
+                0, internal_format,
+                surface->w, 0,
+                format, GL_UNSIGNED_BYTE,
+                surface->pixels);
+            break;
+        case GL_TEXTURE_2D:
+            glTexImage2D(
+                target,
+                0, internal_format,
+                surface->w, surface->h, 0,
+                format, GL_UNSIGNED_BYTE,
+                surface->pixels);
+            break;
+        default:
+            fprintf(stderr, "Unsupported texture target\n");
+    }
+
+	glBindTexture(target, 0);
+
+    return texture_id;
+}
+
+TextureInfo CreateTexture(const char *filename, GLenum target)
+{
+    TextureInfo tex_info;
+	SDL_Surface *surface = IMG_Load(filename);
+    SCOPE_EXIT(SDL_FreeSurface(surface));
+    Uint32 colorkey = SDL_MapRGB(surface->format, 37, 65, 82);
+
+    surface->format->Amask = 0xFF000000;
+    surface->format->Ashift = 24;
+
+    if (SDL_SetColorKey(surface, SDL_TRUE, colorkey) != 0) {
+        fprintf(stderr, "Failed to set surface color key\n");
+    }
+
+    tex_info.w = surface->w;
+    tex_info.h = surface->h;
+    tex_info.texture = CreateTextureFromSurface(surface, target);
+    return tex_info;
+}
+
+void HandleGLError(GLenum error)
+{
+    switch (error) {
+        case GL_NO_ERROR:
+            break;
+        case GL_INVALID_ENUM:
+            fprintf(stderr, "GL_ERROR: Invalid enum\n");
+            break;
+        case GL_INVALID_VALUE:
+            fprintf(stderr, "GL_ERROR: Invalid value\n");
+            break;
+        case GL_INVALID_OPERATION:
+            fprintf(stderr, "GL_ERROR: Invalid operation\n");
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            fprintf(stderr, "GL_ERROR: Invalid framebuffer operation\n");
+            break;
+        case GL_OUT_OF_MEMORY:
+            fprintf(stderr, "GL_ERROR: Out of memory\n");
+            break;
+        case GL_STACK_UNDERFLOW:
+            fprintf(stderr, "GL_ERROR: Stack underflow\n");
+            break;
+        case GL_STACK_OVERFLOW:
+            fprintf(stderr, "GL_ERROR: Stack overflow\n");
+            break;
+        default:
+            break;
+    };
 }
