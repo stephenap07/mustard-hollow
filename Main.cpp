@@ -19,7 +19,7 @@
 #include <glm/gtc/matrix_access.hpp> 
 
 
-#include "scope_exit.hpp"
+#include "ScopeExit.hpp"
 
 using std::vector;
 
@@ -38,6 +38,10 @@ struct ShaderInfo {
     GLuint shader;
 };
 
+struct Rect {
+    float x, y, w, h;
+};
+
 struct TextureInfo {
     float w, h;
     GLuint texture;
@@ -51,6 +55,7 @@ struct VertexBuffer {
 };
 
 struct Sprite {
+    Rect rect;
     VertexBuffer vbuffer;
     TextureInfo tinfo;
 };
@@ -63,6 +68,9 @@ enum class UniType {
     kMatrix3x4fv
 };
 
+enum class TextureType {
+    kT2RL = 0
+};
 
 /* System initialization */
 void Init(RenderContext *context, const float screen_width, const float screen_height);
@@ -74,17 +82,17 @@ const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos);
 /* Vertex initialization and drawing */
 VertexBuffer CreateQuad(const GLuint program);
 void DrawQuad(const VertexBuffer &buffer);
+void DrawSprite(const Sprite &sprite);
 
 /* Uniform handling functions */
 void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data);
 
 /* Texture loading */
-TextureInfo CreateTexture(const char *filename, GLenum target);
+TextureInfo CreateTexture(const char *filename, TextureType tex_type);
 GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target);
 
 /* Error Handling */
 void HandleGLError(GLenum error);
-
 
 int main(int argc, char *argv[])
 {
@@ -108,58 +116,50 @@ int main(int argc, char *argv[])
     glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     SetUniform(program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
 
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(16.0f / (640/2.0f)));
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(16.0f / 640.0f));
+     model = glm::scale(model, glm::vec3(10));
     SetUniform(program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
 
     GLint is_textured = 1;
     SetUniform(program, UniType::k1i, "uni_is_textured", 1, (GLvoid*)&is_textured);
 
-    TextureInfo tex_info = CreateTexture("smw_ground.png", GL_TEXTURE_2D);
+    TextureInfo tex_info = CreateTexture("smw_ground.png", TextureType::kT2RL);
     SCOPE_EXIT(glDeleteTextures(1, &tex_info.texture));
-
-    int x = 137, y = 99;
-    int u = 16, v = 16;
-    glm::vec4 texture_xy_uv = glm::vec4(x / tex_info.w, y / tex_info.h, u / tex_info.w, v / tex_info.h);
-    SetUniform(program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(texture_xy_uv));
-
-    glBindTexture(GL_TEXTURE_2D, tex_info.texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     VertexBuffer buffer = CreateQuad(program);
 
     Sprite sprite;
     sprite.vbuffer = buffer;
     sprite.tinfo = tex_info;
+    sprite.rect = { 137.0f, 99.0f, 16.0f, 16.0f };
+
+    glm::vec4 texture_xy_uv = glm::vec4(sprite.rect.x / tex_info.w, sprite.rect.y / tex_info.h, sprite.rect.w / tex_info.w, sprite.rect.h / tex_info.h);
+    SetUniform(program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(texture_xy_uv));
 
     bool do_quit = false;
     while (!do_quit) {
         
         /* Poll for Events */
-        SDL_Event mh_event;
-        while (SDL_PollEvent(&mh_event)) {
-            switch (mh_event.type) {
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
                 case SDL_QUIT:
                     do_quit = true;
                     break;
                 case SDL_KEYUP:
-                    if (mh_event.key.keysym.sym == SDLK_ESCAPE) {
+                    if (ev.key.keysym.sym == SDLK_ESCAPE) {
                         do_quit = true;
                     }
                     break;
             }
         }
 
-        glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        glBindTexture(GL_TEXTURE_2D, tex_info.texture);
-        DrawQuad(buffer);
+        glBindTexture(GL_TEXTURE_2D, sprite.tinfo.texture);
+        DrawQuad(sprite.vbuffer);
 
         glFlush();
         SDL_GL_SwapWindow(context.window);
@@ -211,11 +211,12 @@ void Init(RenderContext *context, const float screen_width, const float screen_h
 const GLuint CreateShader(const char *filename, const GLenum target)
 {
     FILE *file_ptr = std::fopen(filename, "rb");
-    GLchar *content = nullptr;
-    long length = 0;
-
     SCOPE_EXIT(std::fclose(file_ptr));
-    SCOPE_EXIT(delete [] content);
+
+    GLchar *content = nullptr;
+    SCOPE_EXIT(if (content) delete [] content);
+
+    long length = 0;
 
     if (!file_ptr) {
         std::perror("fopen");
@@ -439,23 +440,42 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
     return texture_id;
 }
 
-TextureInfo CreateTexture(const char *filename, GLenum target)
+TextureInfo CreateTexture(const char *filename, TextureType tex_type)
 {
     TextureInfo tex_info;
+
+    SDL_Surface *optimized_surface = nullptr;
 	SDL_Surface *surface = IMG_Load(filename);
-    SCOPE_EXIT(SDL_FreeSurface(surface));
-    Uint32 colorkey = SDL_MapRGB(surface->format, 37, 65, 82);
+    SCOPE_EXIT(SDL_FreeSurface(optimized_surface));
 
-    surface->format->Amask = 0xFF000000;
-    surface->format->Ashift = 24;
+    if (surface != nullptr) {
+        optimized_surface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
+        SDL_FreeSurface(surface);
+    }
 
-    if (SDL_SetColorKey(surface, SDL_TRUE, colorkey) != 0) {
+    Uint32 colorkey = SDL_MapRGB(optimized_surface->format, 27, 49, 65);
+
+    optimized_surface->format->Amask = 0xFF000000;
+    optimized_surface->format->Ashift = 24;
+
+    if (SDL_SetColorKey(optimized_surface, SDL_TRUE, colorkey) != 0) {
         fprintf(stderr, "Failed to set surface color key\n");
     }
 
-    tex_info.w = surface->w;
-    tex_info.h = surface->h;
-    tex_info.texture = CreateTextureFromSurface(surface, target);
+    tex_info.w = optimized_surface->w;
+    tex_info.h = optimized_surface->h;
+    
+    if (tex_type == TextureType::kT2RL) {
+        tex_info.texture = CreateTextureFromSurface(optimized_surface, GL_TEXTURE_2D);
+
+        glBindTexture(GL_TEXTURE_2D, tex_info.texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     return tex_info;
 }
 
@@ -488,4 +508,8 @@ void HandleGLError(GLenum error)
         default:
             break;
     };
+}
+
+void DrawSprite(const Sprite &sprite)
+{
 }
