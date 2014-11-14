@@ -11,5 +11,7 @@ uniform vec4 uni_tex_xy_uv;
 void main()
 {
     v_texcoord = uni_tex_xy_uv.xy + (texcoord * uni_tex_xy_uv.zw);
-    gl_Position = uni_model * position;
+    vec4 new_pos = position;
+
+    gl_Position = uni_model * new_pos;
 }

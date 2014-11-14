@@ -62,6 +62,7 @@ struct Sprite {
 
 enum class UniType {
     k1i = 0,
+    k1f,
     k4fv,
     k2fv,
     kMatrix4fv,
@@ -113,16 +114,6 @@ int main(int argc, char *argv[])
     };    
     const GLuint program = CreateProgram(shaders);
 
-    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    SetUniform(program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
-
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(16.0f / 640.0f));
-     model = glm::scale(model, glm::vec3(10));
-    SetUniform(program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
-
-    GLint is_textured = 1;
-    SetUniform(program, UniType::k1i, "uni_is_textured", 1, (GLvoid*)&is_textured);
-
     TextureInfo tex_info = CreateTexture("smw_ground.png", TextureType::kT2RL);
     SCOPE_EXIT(glDeleteTextures(1, &tex_info.texture));
 
@@ -135,6 +126,17 @@ int main(int argc, char *argv[])
 
     glm::vec4 texture_xy_uv = glm::vec4(sprite.rect.x / tex_info.w, sprite.rect.y / tex_info.h, sprite.rect.w / tex_info.w, sprite.rect.h / tex_info.h);
     SetUniform(program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(texture_xy_uv));
+
+    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    SetUniform(program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
+
+    glm::mat4 model = glm::translate(glm::mat4(1.0), glm::vec3(-1.0, 0, 0));
+     model = glm::scale(model, glm::vec3(sprite.rect.w / SCREEN_WIDTH, sprite.rect.h / SCREEN_HEIGHT, 1.0f));
+    SetUniform(program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
+
+    GLint is_textured = 1;
+    SetUniform(program, UniType::k1i, "uni_is_textured", 1, (GLvoid*)&is_textured);
+
 
     bool do_quit = false;
     while (!do_quit) {
@@ -154,10 +156,13 @@ int main(int argc, char *argv[])
             }
         }
 
+        Uint32 ticks = SDL_GetTicks();
+        SetUniform(program, UniType::k1i, "uni_time", 1, (GLvoid*)&ticks);
+
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         glBindTexture(GL_TEXTURE_2D, sprite.tinfo.texture);
         DrawQuad(sprite.vbuffer);
 
@@ -362,12 +367,19 @@ void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count,
         fprintf(stderr, "Error (%d) in shader program (%d), uniform (%s)\n", error, program, name);
     }
 
-    if (uniform == -1) {
-        fprintf(stderr, "Invalid uniform type (%d) uniform (%s) for shader id\n", program, name);
+    if (uniform < 0) {
+        fprintf(stderr, "Invalid value for uniform (%s) in program (%d)", name, program);
+    } else if (uniform == GL_INVALID_VALUE) {
+        fprintf(stderr, "Invalid program for uniform (%s) in program (%d)", name, program);
+    } else if (uniform == GL_INVALID_OPERATION) {
+        fprintf(stderr, "Invalid program operation for uniform (%s) in program (%d)", name, program);
     } else {
         switch (type) {
             case UniType::k1i:
                 glUniform1i(uniform, *((GLint*)data));
+                break;
+            case UniType::k1f:
+                glUniform1f(uniform, *((GLfloat*)data));
                 break;
             case UniType::k4fv:
                 glUniform4fv(uniform, count, (GLfloat*)data);
@@ -454,9 +466,6 @@ TextureInfo CreateTexture(const char *filename, TextureType tex_type)
     }
 
     Uint32 colorkey = SDL_MapRGB(optimized_surface->format, 27, 49, 65);
-
-    optimized_surface->format->Amask = 0xFF000000;
-    optimized_surface->format->Ashift = 24;
 
     if (SDL_SetColorKey(optimized_surface, SDL_TRUE, colorkey) != 0) {
         fprintf(stderr, "Failed to set surface color key\n");
