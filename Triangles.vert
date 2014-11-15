@@ -15,7 +15,6 @@ void main()
 
     v_texcoord = uni_tex_xy_uv.xy + (texcoord * uni_tex_xy_uv.zw);
     vec4 new_pos = position;
-    new_pos.x += sin(ftime);
 
     gl_Position = uni_model * new_pos;
 }

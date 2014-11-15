@@ -3,7 +3,7 @@
 #include "Drawing.hpp"
 
 
-void Init(RenderContext *context, const float screen_width, const float screen_height)
+void RenderContext::Init(const float screen_width, const float screen_height)
 {
     /* SDL Initialization */
     SDL_Init(SDL_INIT_VIDEO);
@@ -15,18 +15,18 @@ void Init(RenderContext *context, const float screen_width, const float screen_h
 
     IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF);
 
-    context->window = SDL_CreateWindow(
+    window = SDL_CreateWindow(
         WINDOW_TITLE, 100, 100,
         screen_width, screen_height,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
-    if (context->window == nullptr) {
+    if (window == nullptr) {
         fprintf(stderr, "Failed to create SDL_Window: %s\n", SDL_GetError());
     }
 
-    context->gl_context = SDL_GL_CreateContext(context->window);
-    if (context->gl_context == nullptr) {
-        fprintf(stderr, "1SDL_GL_CreateContext: FATAL - Failed to created GL context\n");
+    gl_context = SDL_GL_CreateContext(window);
+    if (gl_context == nullptr) {
+        fprintf(stderr, "SDL_GL_CreateContext: Failed to created GL context\n");
     }
 
     glewExperimental = GL_TRUE;
@@ -38,4 +38,12 @@ void Init(RenderContext *context, const float screen_width, const float screen_h
     if (glew_error != GLEW_OK) {
         fprintf(stderr, "glewInit failed, aborting\n");
     }
+}
+
+RenderContext::~RenderContext()
+{
+    if (gl_context) SDL_GL_DeleteContext(gl_context);
+    if (window) SDL_DestroyWindow(window);
+    IMG_Quit();
+    SDL_Quit();
 }

@@ -21,6 +21,7 @@ const GLuint CreateShader(const char *filename, const GLenum target)
     long length = 0;
 
     if (!file_ptr) {
+        std::fprintf(stderr, "Failed to open %s\n", filename);
         std::perror("fopen");
     }
 

@@ -9,14 +9,17 @@
 
 
 static const char *WINDOW_TITLE = "Mustard Hollow v0.0.1";
-static const float SCREEN_WIDTH = 640;
-static const float SCREEN_HEIGHT = 640;
-static const bool IGNORE_UNUSED_UNIFORMS = false;
+static const float SCREEN_WIDTH = 1027;
+static const float SCREEN_HEIGHT = 720;
+static const bool IGNORE_UNUSED_UNIFORMS = true;
 
 
 struct RenderContext {
     SDL_Window *window;
     SDL_GLContext gl_context;
+
+    void Init(float screen_width, float screen_height);
+    ~RenderContext();
 };
 
 struct ShaderInfo {
@@ -52,9 +55,6 @@ enum class TextureType {
 
 
 /** Function Definitions **/
-
-/* System initialization */
-void Init(RenderContext *context, const float screen_width, const float screen_height);
 
 /* Shader Creation */
 const GLuint CreateShader(const char *filename, const GLenum target);
