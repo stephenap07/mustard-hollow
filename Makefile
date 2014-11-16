@@ -4,7 +4,7 @@ OBJ  = $(addprefix obj/,$(notdir $(SRC:.cpp=.o)))
 DEPS = $(SRC:%.cpp=obj/%.d)
 
 LDFLAGS = -lGLEW -lSDL2 -lSDL2_image -L/usr/local/lib -lfreetype -lpthread
-CFLAGS  = -std=c++11 -Wall -fPIC -g -I/usr/include/freetype2 -I/usr/local/include
+CFLAGS  = -ansi -std=c++11 -Wall -fPIC -g -I/usr/include/freetype2 -I/usr/local/include
 
 EXE = muh
 
