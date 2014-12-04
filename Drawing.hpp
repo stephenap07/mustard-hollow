@@ -7,6 +7,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_access.hpp> 
+
 
 static const char *WINDOW_TITLE = "Mustard Hollow v0.0.1";
 static const float SCREEN_WIDTH = 1027;
@@ -22,7 +26,14 @@ struct RenderContext {
     ~RenderContext();
 };
 
+struct RenderWorld {
+    glm::mat4 proj;
+    glm::mat4 view;
+};
+
 struct ShaderInfo {
+    ShaderInfo();
+    ShaderInfo(const char *filename, GLenum target);
     GLenum type;
     const char *filename;
     GLuint shader;
