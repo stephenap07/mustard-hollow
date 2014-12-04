@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
         SetUniform(sprite_props.program, UniType::k1i, "uni_time", 1, (GLvoid*)&ticks);
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
         glDepthFunc(GL_LEQUAL);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         

@@ -7,41 +7,8 @@
 
 using std::vector;
 
-/**
- * Compile the shader and return a GLuint
- */
-const GLuint CreateShader(const char *filename, const GLenum target)
+inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
 {
-    FILE *file_ptr = std::fopen(filename, "rb");
-    SCOPE_EXIT(std::fclose(file_ptr););
-
-    GLchar *content = nullptr;
-    SCOPE_EXIT(if (content) delete [] content;);
-
-    long length = 0;
-
-    if (!file_ptr) {
-        std::fprintf(stderr, "Failed to open %s\n", filename);
-        std::perror("fopen");
-    }
-
-    std::fseek(file_ptr, 0L, SEEK_END);
-    length = std::ftell(file_ptr);
-    content = new GLchar[length + 1];
-    std::fseek(file_ptr, 0L, SEEK_SET);
-
-    if (!content) {
-        std::fprintf(stderr, "failed to allocate memory\n");
-    }
-
-    std::fread(content, sizeof content, length, file_ptr);
-    content[length] = 0;
-
-    const char *content_ptr = content;
-    GLuint shader = glCreateShader(target);
-    glShaderSource(shader, 1, &content_ptr, NULL);
-    glCompileShader(shader);
-
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {
@@ -65,6 +32,42 @@ const GLuint CreateShader(const char *filename, const GLenum target)
         std::fprintf(stderr, "Compile failure in %s shader %s:\n %s\n",
                      shader_type_cstr, filename, str_info_log);
     }
+}
+
+/**
+ * Compile the shader and return a GLuint
+ */
+const GLuint CreateShader(const char *filename, const GLenum target)
+{
+    FILE *file_ptr = std::fopen(filename, "rb");
+    long length = 0;
+    GLchar *content = nullptr;
+
+    SCOPE_EXIT(std::fclose(file_ptr););
+    SCOPE_EXIT(if (content) delete [] content;);
+
+    if (!file_ptr) {
+        std::fprintf(stderr, "Failed to open %s\n", filename);
+        std::perror("fopen");
+    }
+
+    std::fseek(file_ptr, 0L, SEEK_END);
+    length = std::ftell(file_ptr);
+    content = new GLchar[length + 1];
+    std::fseek(file_ptr, 0L, SEEK_SET);
+
+    if (!content) {
+        std::fprintf(stderr, "failed to allocate memory\n");
+    }
+
+    std::fread(content, sizeof content, length, file_ptr);
+    content[length] = 0;
+
+    const char *content_ptr = content;
+    GLuint shader = glCreateShader(target);
+    glShaderSource(shader, 1, &content_ptr, NULL);
+    glCompileShader(shader);
+    PrintShaderError(shader, target, filename);
 
     return shader;
 }
