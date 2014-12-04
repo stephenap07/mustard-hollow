@@ -33,19 +33,28 @@ int main(int argc, char *argv[])
     context.Init(SCREEN_WIDTH, SCREEN_HEIGHT);
 
     vector<ShaderInfo> shaders = {
-        {GL_VERTEX_SHADER, "Triangles.vert",
-         CreateShader("Triangles.vert", GL_VERTEX_SHADER)},
-        {GL_FRAGMENT_SHADER, "Triangles.frag",
-         CreateShader("Triangles.frag", GL_FRAGMENT_SHADER)}
+        ShaderInfo("Triangles.vert", GL_VERTEX_SHADER),
+        ShaderInfo("Triangles.frag", GL_FRAGMENT_SHADER)
     };    
+
+    GLuint program = CreateProgram(shaders);
 
     /* Sprite Creation */
     Sprite sprite;
-    sprite.vbuffer = CreateQuad(CreateProgram(shaders));
+    sprite.vbuffer = CreateQuad(program);
     sprite.tinfo = CreateTexture("smw_ground.png", TextureType::kT2RL);
-    sprite.rect = { 137.0f, 99.0f, 16.0f, 16.0f };
-    sprite.pos.x = sprite.rect.w / 2;
-    sprite.pos.y = sprite.rect.h / 2;
+    sprite.sub_rect = { 137.0f, 99.0f, 16.0f, 16.0f };
+    sprite.pos.x = sprite.sub_rect.w / 2;
+    sprite.pos.y = sprite.sub_rect.h / 2;
+
+    /* Sprite properties */
+    SpriteProperties sprite_props;
+    sprite_props.program = program;
+    sprite_props.is_textured = true;
+    sprite_props.texture_xy_uv = glm::vec4(sprite.sub_rect.x / sprite.tinfo.w, sprite.sub_rect.y / sprite.tinfo.h, sprite.sub_rect.w / sprite.tinfo.w, sprite.sub_rect.h / sprite.tinfo.h);
+    sprite_props.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    SetUniform(sprite_props.program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(sprite_props.texture_xy_uv));
+    SetUniform(sprite_props.program, UniType::k4fv, "uni_color", 1, glm::value_ptr(sprite_props.color));
 
     /* Sprite Destruction */
     SCOPE_EXIT(glDeleteTextures(1, &sprite.tinfo.texture););
@@ -53,19 +62,16 @@ int main(int argc, char *argv[])
     SCOPE_EXIT(glDeleteBuffers(1, &sprite.vbuffer.vbo););
     SCOPE_EXIT(glDeleteBuffers(1, &sprite.vbuffer.ebo););
 
-    /* Sprite properties */
-    glm::vec4 texture_xy_uv = glm::vec4(sprite.rect.x / sprite.tinfo.w, sprite.rect.y / sprite.tinfo.h, sprite.rect.w / sprite.tinfo.w, sprite.rect.h / sprite.tinfo.h);
-    SetUniform(sprite.vbuffer.program, UniType::k4fv, "uni_tex_xy_uv", 1, glm::value_ptr(texture_xy_uv));
-
-    glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    SetUniform(sprite.vbuffer.program, UniType::k4fv, "uni_color", 1, glm::value_ptr(color));
-
     glm::mat4 proj = glm::ortho(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f); 
     glm::mat4 view = glm::lookAt(
         glm::vec3(0, 0, 1), // pos
         glm::vec3(0, 0, 0), // look
         glm::vec3(0, 1, 0)  // up
     );
+
+    RenderWorld world;
+    world.proj = proj;
+    world.view = view;
 
 /*
     glGenBuffers(1, &global_ubo);
@@ -123,7 +129,7 @@ int main(int argc, char *argv[])
         }
 
         Uint32 ticks = SDL_GetTicks();
-        SetUniform(sprite.vbuffer.program, UniType::k1i, "uni_time", 1, (GLvoid*)&ticks);
+        SetUniform(sprite_props.program, UniType::k1i, "uni_time", 1, (GLvoid*)&ticks);
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
@@ -131,17 +137,9 @@ int main(int argc, char *argv[])
         
         for (int j = 0; j < map.size(); ++j) { 
             for (int i = 0; i < map[j].size(); ++i) {
-                sprite.pos.x = i * sprite.rect.w + (sprite.rect.w / 2);
-                sprite.pos.y = j * sprite.rect.h + (sprite.rect.h / 2);
-
-                glm::mat4 model = glm::mat4(1.0f);
-                model = (proj * view) * model;
-                model = glm::translate(model, glm::vec3(sprite.pos.x, sprite.pos.y, 0.0f));
-                model = glm::scale(model, glm::vec3(1.0f, -1.0f, 1.0f));
-                model = glm::scale(model, glm::vec3(sprite.rect.w/2, sprite.rect.h/2, 1.0f));
-                SetUniform(sprite.vbuffer.program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
-
-                DrawSprite(sprite);
+                sprite.pos.x = i * sprite.sub_rect.w + (sprite.sub_rect.w / 2);
+                sprite.pos.y = j * sprite.sub_rect.h + (sprite.sub_rect.h / 2);
+                DrawSprite(world, sprite);
             }
         }
 
