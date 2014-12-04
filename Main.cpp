@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
@@ -125,8 +125,7 @@ int main(int argc, char *argv[])
         Uint32 ticks = SDL_GetTicks();
         SetUniform(sprite.vbuffer.program, UniType::k1i, "uni_time", 1, (GLvoid*)&ticks);
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         for (int j = 0; j < map.size(); ++j) { 
@@ -134,18 +133,20 @@ int main(int argc, char *argv[])
                 sprite.pos.x = i * sprite.rect.w + (sprite.rect.w / 2);
                 sprite.pos.y = j * sprite.rect.h + (sprite.rect.h / 2);
 
+                /* Update routine for a sprite */
                 glm::mat4 model = glm::mat4(1.0f);
+
                 model = (proj * view) * model;
                 model = glm::translate(model, glm::vec3(sprite.pos.x, sprite.pos.y, 0.0f));
                 model = glm::scale(model, glm::vec3(1.0f, -1.0f, 1.0f));
                 model = glm::scale(model, glm::vec3(sprite.rect.w/2, sprite.rect.h/2, 1.0f));
+
                 SetUniform(sprite.vbuffer.program, UniType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
 
                 DrawSprite(sprite);
             }
         }
 
-        glFlush();
         SDL_GL_SwapWindow(context.window);
     }
 
