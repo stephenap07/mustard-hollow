@@ -93,3 +93,14 @@ const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos)
 
     return program;
 }
+
+ShaderInfo::ShaderInfo() :type(0), filename(nullptr), shader(0)
+{
+}
+
+ShaderInfo::ShaderInfo(const char *filename, const GLenum target)
+{
+    shader = CreateShader(filename, target);
+    this->type = target;
+    this->filename = filename;
+}
