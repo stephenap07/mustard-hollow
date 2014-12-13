@@ -11,26 +11,34 @@ struct Rect {
     float x, y, w, h;
 };
 
-struct SpriteProperties {
-    GLuint program;
-    bool is_textured;
-    glm::vec4 texture_xy_uv;
-    glm::vec4 color;
-};
-
 struct Sprite {
-    glm::vec2 pos;
-    Rect sub_rect;
-    VertexBuffer vbuffer;
-    TextureInfo tinfo;
-
+    Sprite(); 
+    ~Sprite();
     glm::mat4 getModel(const glm::mat4 &proj, const glm::mat4 &view) const;
+
+    const glm::vec2 position() const;
+    void setPosition(glm::vec2 position);
+    void setX(float x);
+    void setY(float y);
+    const Rect subRect() const;
+    void setSubRect(const Rect &subRect);
+    const glm::mat4 transform() const;
+    const VertexBuffer vertexBuffer() const;
+    const TextureInfo textureInfo() const;
+    void setTextureInfo(const TextureInfo &textureInfo);
+
+private:
+    glm::vec2 m_position;
+    Rect m_subRect;
+    VertexBuffer m_vertexBuffer;
+    TextureInfo m_textureInfo;
+
+    GLuint m_program;
+    bool m_isTextured;
+    glm::vec4 m_color;
 };
 
 /* Creation Code */
 Sprite CreateTexturedSprite(const char *texture_path, Rect rect);
-
-/* Drawing Code */
-void DrawSprite(const RenderWorld &world, const Sprite &sprite);
 
 #endif

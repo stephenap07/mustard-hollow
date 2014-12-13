@@ -3,6 +3,8 @@
 
 #include "Drawing.hpp"
 
+static const bool DEFAULT_IGNORE_UNUSED_UNIFORMS = true;
+
 VertexBuffer CreateQuad(const GLuint program)
 {
     VertexBuffer buffer;
@@ -61,7 +63,7 @@ void DrawQuad(const VertexBuffer &buffer)
     glUseProgram(0);
 }
 
-void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count, GLvoid *data)
+void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei count, GLvoid *data)
 {
     glUseProgram(program);
 
@@ -75,7 +77,7 @@ void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count,
     }
 
     if (uniform < 0) {
-        if (!IGNORE_UNUSED_UNIFORMS) {
+        if (!DEFAULT_IGNORE_UNUSED_UNIFORMS) {
             fprintf(stderr, "Invalid value for uniform (%s) in program (%d)\n", name, program);
         }
     } else if (uniform == GL_INVALID_VALUE) {
@@ -84,22 +86,22 @@ void SetUniform(GLuint program, UniType type, const GLchar *name, GLsizei count,
         fprintf(stderr, "Invalid program operation for uniform (%s) in program (%d)\n", name, program);
     } else {
         switch (type) {
-            case UniType::k1i:
+            case UniformType::k1i:
                 glUniform1i(uniform, *((GLint*)data));
                 break;
-            case UniType::k1f:
+            case UniformType::k1f:
                 glUniform1f(uniform, *((GLfloat*)data));
                 break;
-            case UniType::k4fv:
+            case UniformType::k4fv:
                 glUniform4fv(uniform, count, (GLfloat*)data);
                 break;
-            case UniType::k2fv:
+            case UniformType::k2fv:
                 glUniform2fv(uniform, count, (GLfloat*)data);
                 break;
-            case UniType::kMatrix4fv:
+            case UniformType::kMatrix4fv:
                 glUniformMatrix4fv(uniform, count, GL_FALSE, (GLfloat*)data);
                 break;
-            case UniType::kMatrix3x4fv:
+            case UniformType::kMatrix3x4fv:
                 glUniformMatrix3x4fv(uniform, count, GL_FALSE, (GLfloat*)data);
                 break;
             default:
