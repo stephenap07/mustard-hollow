@@ -5,7 +5,7 @@ DEPS = $(SRC:%.cpp=obj/%.d)
 
 LDFLAGS = -lGLEW -lSDL2 -lSDL2_image -L/usr/local/lib -lfreetype -lpthread
 CPPFLAGS  = -ansi -std=c++11 -Wall -fPIC -g -I/usr/include/freetype2 -I/usr/local/include
-CFLAGS = -g -std=c99 -Wall -pedantic -Wno-unused-but-set-variable
+CFLAGS = -g -std=c99 -Wall -pedantic
 
 EXE = muh
 
