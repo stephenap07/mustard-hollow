@@ -34,7 +34,7 @@ const glm::mat4 Sprite::transform() const
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(m_position.x + m_subRect.w/2.0f, m_position.y + m_subRect.h/2.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.0f, -1.0f, 1.0f));
-    model = glm::scale(model, glm::vec3(m_subRect.w/2.0f, m_subRect.h/2.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(m_scale.x, m_scale.y, 1.0f));
 
     return model;
 }
@@ -91,4 +91,9 @@ void Sprite::setTextureInfo(const TextureInfo &textureInfo)
 {
     m_textureInfo = textureInfo;
     setSubRect(Rect({0.0f, 0.0f, m_textureInfo.w, m_textureInfo.h}));
+}
+
+void Sprite::setScale(const glm::vec2 &vec)
+{
+    m_scale = vec;
 }

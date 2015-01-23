@@ -29,6 +29,9 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
 
     IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF);
 
+    m_width = screenWidth;
+    m_height = screenHeight;
+
     m_window = SDL_CreateWindow(
         DEFAULT_WINDOW_TITLE, 100, 100,
         screenWidth, screenHeight,
@@ -59,7 +62,6 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
         glm::vec3(0, 0, 0), // look
         glm::vec3(0, 1, 0)  // up
     ));
-
 }
 
 RenderContext::~RenderContext()

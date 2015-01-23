@@ -20,15 +20,17 @@ struct Sprite {
     void setPosition(glm::vec2 position);
     void setX(float x);
     void setY(float y);
-    const Rect subRect() const;
+    void setTextureInfo(const TextureInfo &textureInfo);
     void setSubRect(const Rect &subRect);
+    void setScale(const glm::vec2 &vec);
+    const Rect subRect() const;
     const glm::mat4 transform() const;
     const VertexBuffer vertexBuffer() const;
     const TextureInfo textureInfo() const;
-    void setTextureInfo(const TextureInfo &textureInfo);
 
 private:
     glm::vec2 m_position;
+    glm::vec2 m_scale;
     Rect m_subRect;
     VertexBuffer m_vertexBuffer;
     TextureInfo m_textureInfo;

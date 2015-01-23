@@ -1,9 +1,3 @@
-/**
- * Artificial Intelligence Final Project
- * Stephen Pridham
- *
- */
-
 #include <iostream>
 #include "Mustard.hpp"
 
@@ -12,32 +6,31 @@ using std::vector;
 int main(int argc, char *argv[])
 {
     RenderContext context(640, 480);
-    context.setWindowTitle("Testing framework");
-
-    TileMap tileMap;
-    tileMap.load();
+    context.setWindowTitle("Pokedex with opengl");
 
     Sprite sprite;
-    sprite.setTextureInfo(CreateTexture("smw_ground.png", TextureType::kT2RL));
-    sprite.setSubRect(Rect({ 137.0f, 99.0f, 16.0f, 16.0f }));
-    sprite.setPosition(glm::vec2(0, 0));
+    sprite.setTextureInfo(CreateTexture("assets/pokedex.png", TextureType::kT2RN));
+    sprite.setPosition(glm::vec2(context.windowWidth()/2.0f - sprite.textureInfo().w*1.5/2.0f,
+                                 context.windowHeight()/2.0f - sprite.textureInfo().h*1.5));
+    sprite.setScale(glm::vec2(sprite.textureInfo().w*2, sprite.textureInfo().h*2));
+    int initialY = sprite.position().y;
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    bool do_quit = false;
+    bool doQuit = false;
     Uint32 lastTicks = SDL_GetTicks();
 
-    while (!do_quit) {
+    while (!doQuit) {
         
         /* Poll for Events */
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
                 case SDL_QUIT:
-                    do_quit = true;
+                    doQuit = true;
                     break;
                 case SDL_KEYUP:
                     if (ev.key.keysym.sym == SDLK_ESCAPE) {
-                        do_quit = true;
+                        doQuit = true;
                     }
                     break;
             }
@@ -62,6 +55,7 @@ int main(int argc, char *argv[])
         }
         
         //SetUniform(text_sprite_props.program, UniformType::k1i, "uni_time", 1, (GLvoid*)&ticks);
+        sprite.setY(initialY + 5*sin(lastTicks/100.0f));
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
         glEnable(GL_DEPTH_TEST);
@@ -69,7 +63,6 @@ int main(int argc, char *argv[])
         glDepthFunc(GL_LEQUAL);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        tileMap.draw(context.world());
         context.world()->draw(&sprite);
         context.swapWindow();
     }

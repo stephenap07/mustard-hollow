@@ -86,7 +86,8 @@ enum class UniformType {
 };
 
 enum class TextureType {
-    kT2RL = 0
+    kT2RL,
+    kT2RN
 };
 
 
