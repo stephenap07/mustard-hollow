@@ -1,6 +1,6 @@
-#ifndef TILE_MAP_H_
-#define TILE_MAP_H_
+#pragma once
 
+#include "Rendering.hpp"
 #include "Sprite.hpp"
 
 class TileMap {
@@ -12,5 +12,3 @@ private:
     Sprite m_sprite;
     std::vector<std::vector<int>> m_map;
 };
-
-#endif // TILE_MAP_H_

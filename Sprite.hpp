@@ -14,8 +14,8 @@ struct Rect {
 struct Sprite {
     Sprite(); 
     ~Sprite();
-    glm::mat4 getModel(const glm::mat4 &proj, const glm::mat4 &view) const;
 
+    void loadShaders();
     const glm::vec2 position() const;
     void setPosition(glm::vec2 position);
     void setX(float x);

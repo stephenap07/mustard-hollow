@@ -7,14 +7,15 @@ Sprite::Sprite()
     std::vector<ShaderInfo> shaders = {
         ShaderInfo("Triangles.vert", GL_VERTEX_SHADER),
         ShaderInfo("Triangles.frag", GL_FRAGMENT_SHADER)
-    };    
+    };
 
     m_program = CreateProgram(shaders);
     m_vertexBuffer = CreateQuad(m_program);
 
     m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_isTextured = true;
-    SetUniform(vertexBuffer().program, UniformType::k1i, "uni_is_textured", 1, (GLvoid*)&m_isTextured);
+    m_isTextured = false;
+    SetUniform(vertexBuffer().program, UniformType::k1i,
+               "uni_is_textured", 1, (GLvoid*)&m_isTextured);
     SetUniform(m_program, UniformType::k4fv, "uni_color", 1,
             glm::value_ptr(m_color));
     setSubRect(Rect({0.0f, 0.0f, 1.0f, 1.0f}));
@@ -90,6 +91,9 @@ const TextureInfo Sprite::textureInfo() const
 void Sprite::setTextureInfo(const TextureInfo &textureInfo)
 {
     m_textureInfo = textureInfo;
+    m_isTextured = true;
+    SetUniform(vertexBuffer().program, UniformType::k1i,
+               "uni_is_textured", 1, (GLvoid*)&m_isTextured);
     setSubRect(Rect({0.0f, 0.0f, m_textureInfo.w, m_textureInfo.h}));
 }
 

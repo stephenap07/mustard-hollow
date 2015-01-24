@@ -1,6 +1,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "Drawing.hpp"
+#include "Rendering.hpp"
 #include "Sprite.hpp"
 
 static const char *DEFAULT_WINDOW_TITLE = "Mustard Hollow";
@@ -111,6 +112,8 @@ void RenderContext::swapWindow()
     SDL_GL_SwapWindow(m_window);
 }
 
+//// RenderWorld Implementation
+
 RenderWorld::RenderWorld()
 {
     m_projection = glm::ortho(0.0f, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 0.0f);
@@ -155,7 +158,25 @@ void RenderWorld::draw(Sprite *sprite) const
     glBindTexture(GL_TEXTURE_2D, sprite->textureInfo().texture);
 
     glm::mat4 model = transform() * sprite->transform();
-    SetUniform(sprite->vertexBuffer().program, UniformType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
+    SetUniform(sprite->vertexBuffer().program,
+               UniformType::kMatrix4fv,
+               "uni_model",
+               1,
+               glm::value_ptr(model));
 
     DrawQuad(sprite->vertexBuffer());
+}
+
+void RenderWorld::draw(RenderMessage *message) const
+{
+    glBindTexture(GL_TEXTURE_2D, message->textureInfo.texture);
+
+    glm::mat4 model = transform() * message->transform;
+    SetUniform(message->vertexBuffer.program,
+               UniformType::kMatrix4fv,
+               "uni_model",
+               1,
+               glm::value_ptr(model));
+
+    DrawQuad(message->vertexBuffer);
 }
