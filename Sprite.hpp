@@ -34,7 +34,7 @@ private:
     TextureInfo m_textureInfo;
 
     GLuint m_program;
-    bool m_isTextured;
+    GLuint m_isTextured;
     glm::vec4 m_color;
 };
 

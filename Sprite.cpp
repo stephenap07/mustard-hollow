@@ -11,10 +11,9 @@ Sprite::Sprite()
 
     m_program = CreateProgram(shaders);
     m_vertexBuffer = CreateQuad(m_program);
-
     m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_isTextured = true;
-    SetUniform(vertexBuffer().program, UniformType::k1i, "uni_is_textured", 1, (GLvoid*)&m_isTextured);
+    m_isTextured = 1;
+    SetUniform(vertexBuffer().program, UniformType::k1i, "uni_is_textured", 1, static_cast<GLvoid*>(&m_isTextured));
     SetUniform(m_program, UniformType::k4fv, "uni_color", 1,
             glm::value_ptr(m_color));
     setSubRect(Rect({0.0f, 0.0f, 1.0f, 1.0f}));
@@ -68,13 +67,13 @@ void Sprite::setSubRect(const Rect &subRect)
 {
     m_subRect = subRect;
     glm::vec4 textureXYUV = glm::vec4(
-            m_subRect.x / textureInfo().w,
-            m_subRect.y / textureInfo().h,
-            m_subRect.w / textureInfo().w,
-            m_subRect.h / textureInfo().h
-            );
+        m_subRect.x / m_textureInfo.w,
+        m_subRect.y / m_textureInfo.h,
+        m_subRect.w / m_textureInfo.w,
+        m_subRect.h / m_textureInfo.h
+        );
     SetUniform(m_program, UniformType::k4fv, "uni_tex_xy_uv", 1,
-            glm::value_ptr(textureXYUV));
+               glm::value_ptr(textureXYUV));
 }
 
 const VertexBuffer Sprite::vertexBuffer() const

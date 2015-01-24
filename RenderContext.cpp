@@ -64,12 +64,8 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
 
 RenderContext::~RenderContext()
 {
-    if (m_openGLContext) {
-        SDL_GL_DeleteContext(m_openGLContext);
-    }
-    if (m_window) {
-        SDL_DestroyWindow(m_window);
-    }
+    SDL_GL_DeleteContext(m_openGLContext);
+    SDL_DestroyWindow(m_window);
     IMG_Quit();
     SDL_Quit();
 }
@@ -151,9 +147,7 @@ const glm::mat4 RenderWorld::transform() const
 void RenderWorld::draw(Sprite *sprite) const
 {
     glBindTexture(GL_TEXTURE_2D, sprite->textureInfo().texture);
-
     glm::mat4 model = transform() * sprite->transform();
     SetUniform(sprite->vertexBuffer().program, UniformType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
-
     DrawQuad(sprite->vertexBuffer());
 }

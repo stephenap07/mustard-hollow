@@ -12,11 +12,9 @@ inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {
-        GLint info_log_len;
+        GLint info_log_len = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_len);
-        GLchar *str_info_log = new GLchar[info_log_len + 1];
-        SCOPE_EXIT(if (str_info_log) delete [] str_info_log;);
-
+        GLchar str_info_log[512];
         glGetShaderInfoLog(shader, info_log_len, NULL, str_info_log);
 
         const char *shader_type_cstr = NULL;
@@ -34,6 +32,20 @@ inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
     }
 }
 
+inline void PrintShaderLinkError(GLuint program)
+{
+    GLint status;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if (status == GL_FALSE)
+    {
+        GLint info_log_length;
+        GLchar str_info_log[512];
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
+        glGetProgramInfoLog(program, info_log_length, NULL, str_info_log);
+        fprintf(stderr, "Linker failure: %s\n", str_info_log);
+    }
+}
+
 /**
  * Compile the shader and return a GLuint
  */
@@ -41,10 +53,9 @@ const GLuint CreateShader(const char *filename, const GLenum target)
 {
     FILE *file_ptr = std::fopen(filename, "rb");
     long length = 0;
-    GLchar *content = nullptr;
+    GLchar content[4096];
 
     SCOPE_EXIT(std::fclose(file_ptr););
-    SCOPE_EXIT(if (content) delete [] content;);
 
     if (!file_ptr) {
         std::fprintf(stderr, "Failed to open %s\n", filename);
@@ -53,14 +64,10 @@ const GLuint CreateShader(const char *filename, const GLenum target)
 
     std::fseek(file_ptr, 0L, SEEK_END);
     length = std::ftell(file_ptr);
-    content = new GLchar[length + 1];
+    assert(length < 4096);
     std::fseek(file_ptr, 0L, SEEK_SET);
 
-    if (!content) {
-        std::fprintf(stderr, "failed to allocate memory\n");
-    }
-
-    std::fread(content, sizeof content, length, file_ptr);
+    std::fread(content, sizeof(GLchar), length, file_ptr);
     content[length] = 0;
 
     const char *content_ptr = content;
@@ -79,20 +86,7 @@ const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos)
         glAttachShader(program, info.shader);
     }
     glLinkProgram(program);
-
-    GLint status;
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE)
-    {
-        GLint info_log_length;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
-
-        GLchar *str_info_log = new GLchar[info_log_length + 1];
-        SCOPE_EXIT(if (str_info_log) delete [] str_info_log;);
-
-        glGetProgramInfoLog(program, info_log_length, NULL, str_info_log);
-        fprintf(stderr, "Linker failure: %s\n", str_info_log);
-    }
+    PrintShaderLinkError(program);
 
     return program;
 }

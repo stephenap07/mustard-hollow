@@ -65,15 +65,15 @@ struct ShaderInfo {
 };
 
 struct TextureInfo {
-    float w, h;
-    GLuint texture;
+    float w = 0.0f, h = 0.0f;
+    GLuint texture = 0;
 };
 
 struct VertexBuffer {
-    GLuint program;
-    GLuint vao;
-    GLuint vbo;
-    GLuint ebo;
+    GLuint program = 0;
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint ebo = 0;
 };
 
 enum class UniformType {

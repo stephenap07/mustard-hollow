@@ -38,7 +38,7 @@ VertexBuffer CreateQuad(const GLuint program)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vert_quad), vert_quad, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), nullptr);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), (GLvoid*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -70,6 +70,7 @@ void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei co
     /* Clear Errors */
     glGetError();
     GLint uniform = glGetUniformLocation(program, name);
+
     GLenum error = glGetError();
 
     if (error) {
@@ -87,22 +88,22 @@ void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei co
     } else {
         switch (type) {
             case UniformType::k1i:
-                glUniform1i(uniform, *((GLint*)data));
+                glUniform1i(uniform, *static_cast<GLint*>(data));
                 break;
             case UniformType::k1f:
-                glUniform1f(uniform, *((GLfloat*)data));
+                glUniform1f(uniform, *static_cast<GLfloat*>(data));
                 break;
             case UniformType::k4fv:
-                glUniform4fv(uniform, count, (GLfloat*)data);
+                glUniform4fv(uniform, count, static_cast<GLfloat*>(data));
                 break;
             case UniformType::k2fv:
-                glUniform2fv(uniform, count, (GLfloat*)data);
+                glUniform2fv(uniform, count, static_cast<GLfloat*>(data));
                 break;
             case UniformType::kMatrix4fv:
-                glUniformMatrix4fv(uniform, count, GL_FALSE, (GLfloat*)data);
+                glUniformMatrix4fv(uniform, count, GL_FALSE, static_cast<GLfloat*>(data));
                 break;
             case UniformType::kMatrix3x4fv:
-                glUniformMatrix3x4fv(uniform, count, GL_FALSE, (GLfloat*)data);
+                glUniformMatrix3x4fv(uniform, count, GL_FALSE, static_cast<GLfloat*>(data));
                 break;
             default:
                 fprintf(stderr, "Invalid uniform type\n");

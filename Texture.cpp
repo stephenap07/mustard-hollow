@@ -65,17 +65,12 @@ TextureInfo CreateTexture(const char *filename, TextureType tex_type)
     TextureInfo tex_info;
 
     SDL_Surface *optimized_surface = nullptr;
-    SCOPE_EXIT(if (optimized_surface) SDL_FreeSurface(optimized_surface););
-
-    /* Create an optimized surface */
-    {
-        SDL_Surface *surface = IMG_Load(filename);
-        SCOPE_EXIT(if (surface) SDL_FreeSurface(surface););
-
-        if (surface != nullptr) {
-            optimized_surface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
-        }
+    SDL_Surface *surface = IMG_Load(filename);
+    if (surface) {
+        optimized_surface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
     }
+    SCOPE_EXIT(if (optimized_surface) SDL_FreeSurface(optimized_surface););
+    SDL_FreeSurface(surface);
 
     Uint32 colorkey = SDL_MapRGB(optimized_surface->format, 0x25, 0x41, 0x52);
 
