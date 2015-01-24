@@ -62,29 +62,23 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
 
 TextureInfo CreateTexture(const char *filename, TextureType tex_type)
 {
-    TextureInfo tex_info;
+    TextureInfo texInfo;
 
-    SDL_Surface *optimized_surface = nullptr;
+    SDL_Surface *optimizedSurface = nullptr;
     SDL_Surface *surface = IMG_Load(filename);
     if (surface) {
-        optimized_surface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
+        optimizedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
     }
-    SCOPE_EXIT(if (optimized_surface) SDL_FreeSurface(optimized_surface););
+    SCOPE_EXIT(if (optimizedSurface) SDL_FreeSurface(optimizedSurface););
     SDL_FreeSurface(surface);
 
-    Uint32 colorkey = SDL_MapRGB(optimized_surface->format, 0x25, 0x41, 0x52);
-
-    if (SDL_SetColorKey(optimized_surface, SDL_TRUE, colorkey) != 0) {
-        fprintf(stderr, "Failed to set surface color key\n");
-    }
-
-    tex_info.w = optimized_surface->w;
-    tex_info.h = optimized_surface->h;
+    texInfo.w = optimizedSurface->w;
+    texInfo.h = optimizedSurface->h;
     
     if (tex_type == TextureType::kT2RL) {
-        tex_info.texture = CreateTextureFromSurface(optimized_surface, GL_TEXTURE_2D);
+        texInfo.texture = CreateTextureFromSurface(optimizedSurface, GL_TEXTURE_2D);
 
-        glBindTexture(GL_TEXTURE_2D, tex_info.texture);
+        glBindTexture(GL_TEXTURE_2D, texInfo.texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -92,5 +86,5 @@ TextureInfo CreateTexture(const char *filename, TextureType tex_type)
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    return tex_info;
+    return texInfo;
 }
