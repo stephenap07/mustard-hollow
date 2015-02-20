@@ -1,3 +1,5 @@
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
@@ -51,28 +53,16 @@ inline void PrintShaderLinkError(GLuint program)
  */
 const GLuint CreateShader(const char *filename, const GLenum target)
 {
-    FILE *file_ptr = std::fopen(filename, "rb");
-    long length = 0;
-    GLchar content[4096];
-
-    SCOPE_EXIT(std::fclose(file_ptr););
-
-    if (!file_ptr) {
-        std::fprintf(stderr, "Failed to open %s\n", filename);
-        std::perror("fopen");
+    std::ifstream fileStream(filename);
+    if (!fileStream.is_open()) {
+        std::cerr << "Woops, file " << filename << " can't be opened" << std::endl;
+        exit(1);
     }
-
-    std::fseek(file_ptr, 0L, SEEK_END);
-    length = std::ftell(file_ptr);
-    assert(length < 4096);
-    std::fseek(file_ptr, 0L, SEEK_SET);
-
-    std::fread(content, sizeof(GLchar), length, file_ptr);
-    content[length] = 0;
-
-    const char *content_ptr = content;
+    std::string str((std::istreambuf_iterator<GLchar>(fileStream)),
+            std::istreambuf_iterator<GLchar>());
+    const GLchar *const_str = reinterpret_cast<const GLchar *>(str.c_str());
     GLuint shader = glCreateShader(target);
-    glShaderSource(shader, 1, &content_ptr, NULL);
+    glShaderSource(shader, 1, &const_str, NULL);
     glCompileShader(shader);
     PrintShaderError(shader, target, filename);
 
