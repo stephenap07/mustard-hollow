@@ -16,8 +16,6 @@ int main(int argc, char *argv[])
 
     TileMap tileMap;
     tileMap.load();
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     bool do_quit = false;
 
     while (!do_quit) {
@@ -37,15 +35,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        //Uint32 ticks = SDL_GetTicks();
-        //SetUniform(text_sprite_props.program, UniformType::k1i, "uni_time", 1, (GLvoid*)&ticks);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glDepthFunc(GL_LEQUAL);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        context.clearWindow();
         tileMap.draw(context.world());
         context.swapWindow();
     }

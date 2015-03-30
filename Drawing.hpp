@@ -41,7 +41,8 @@ public:
     RenderWorld *world();
     const std::string windowTitle() const;
     void setWindowTitle(const std::string &newTitle);
-    void swapWindow();
+    void swapWindow() const;
+    void clearWindow() const;
 
     const float windowWidth() const;
     const float windowHeight() const;

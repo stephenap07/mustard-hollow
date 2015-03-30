@@ -60,6 +60,8 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
         glm::vec3(0, 1, 0)  // up
     ));
 
+    // Default GL properties
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 RenderContext::~RenderContext()
@@ -100,9 +102,18 @@ void RenderContext::setWindowTitle(const std::string &newTitle)
     SDL_SetWindowTitle(m_window, newTitle.c_str());
 }
 
-void RenderContext::swapWindow()
+void RenderContext::swapWindow() const
 {
     SDL_GL_SwapWindow(m_window);
+}
+
+void RenderContext::clearWindow() const
+{
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glDepthFunc(GL_LEQUAL);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 RenderWorld::RenderWorld()
