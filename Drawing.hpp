@@ -96,7 +96,7 @@ enum class TextureType {
 
 /* Shader Creation */
 const GLuint CreateShader(const char *filename, const GLenum target);
-const GLuint CreateProgram(const std::vector<ShaderInfo> &shader_infos);
+const GLuint CreateProgram(const std::vector<ShaderInfo> &shaderInfos);
 
 /* Vertex initialization and drawing */
 VertexBuffer CreateQuad(const GLuint program);
@@ -106,7 +106,7 @@ void DrawQuad(const VertexBuffer &buffer);
 void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei count, GLvoid *data);
 
 /* Texture loading */
-TextureInfo CreateTexture(const char *filename, TextureType tex_type);
+TextureInfo CreateTexture(const char *filename, TextureType textureType);
 GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target);
 
 /* Error Handling */

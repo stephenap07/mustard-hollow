@@ -14,23 +14,23 @@ inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {
-        GLint info_log_len = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_len);
-        GLchar str_info_log[512];
-        glGetShaderInfoLog(shader, info_log_len, NULL, str_info_log);
+        GLint infoLogLen = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
+        GLchar strInfoLog[512];
+        glGetShaderInfoLog(shader, infoLogLen, NULL, strInfoLog);
 
-        const char *shader_type_cstr = NULL;
+        const char *shaderTypeCStr = NULL;
 
         if (target == GL_VERTEX_SHADER) {
-            shader_type_cstr = "vertex";
+            shaderTypeCStr = "vertex";
         } else if (target == GL_GEOMETRY_SHADER) {
-            shader_type_cstr = "geometry";
+            shaderTypeCStr = "geometry";
         } else if (target == GL_FRAGMENT_SHADER) {
-            shader_type_cstr = "fragment";
+            shaderTypeCStr = "fragment";
         }
 
         std::fprintf(stderr, "Compile failure in %s shader %s:\n %s\n",
-                     shader_type_cstr, filename, str_info_log);
+                     shaderTypeCStr, filename, strInfoLog);
     }
 }
 
@@ -40,11 +40,11 @@ inline void PrintShaderLinkError(GLuint program)
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (status == GL_FALSE)
     {
-        GLint info_log_length;
-        GLchar str_info_log[512];
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
-        glGetProgramInfoLog(program, info_log_length, NULL, str_info_log);
-        fprintf(stderr, "Linker failure: %s\n", str_info_log);
+        GLint infoLogLength;
+        GLchar strInfoLog[512];
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+        glGetProgramInfoLog(program, infoLogLength, NULL, strInfoLog);
+        fprintf(stderr, "Linker failure: %s\n", strInfoLog);
     }
 }
 
@@ -69,10 +69,10 @@ const GLuint CreateShader(const char *filename, const GLenum target)
     return shader;
 }
 
-const GLuint CreateProgram(const vector<ShaderInfo> &shader_infos)
+const GLuint CreateProgram(const vector<ShaderInfo> &shaderInfos)
 {
     GLuint program = glCreateProgram();
-    for (auto info : shader_infos) {
+    for (auto info : shaderInfos) {
         glAttachShader(program, info.shader);
     }
     glLinkProgram(program);

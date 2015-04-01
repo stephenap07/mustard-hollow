@@ -12,19 +12,19 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
 {
 	assert(surface != nullptr);
 
-	GLuint texture_id;
-	glGenTextures(1, &texture_id);
-	glBindTexture(target, texture_id);
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(target, textureID);
 
 	GLenum format;
-    GLint internal_format = GL_RGB8;
+    GLint internalFormat = GL_RGB8;
 	switch (surface->format->BytesPerPixel) {
         case 1:
             format = (surface->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
             break;
 		case 4:
 			format = (surface->format->Rmask == 0x000000ff) ? GL_RGBA : GL_BGRA;
-            internal_format = GL_RGBA8;
+            internalFormat = GL_RGBA8;
 			break;
 		case 3:
 			format = (surface->format->Rmask == 0x000000ff) ? GL_RGB : GL_BGR;
@@ -38,7 +38,7 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
         case GL_TEXTURE_1D:
             glTexImage1D(
                 target,
-                0, internal_format,
+                0, internalFormat,
                 surface->w, 0,
                 format, GL_UNSIGNED_BYTE,
                 surface->pixels);
@@ -46,7 +46,7 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
         case GL_TEXTURE_2D:
             glTexImage2D(
                 target,
-                0, internal_format,
+                0, internalFormat,
                 surface->w, surface->h, 0,
                 format, GL_UNSIGNED_BYTE,
                 surface->pixels);
@@ -57,10 +57,10 @@ GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target)
 
 	glBindTexture(target, 0);
 
-    return texture_id;
+    return textureID;
 }
 
-TextureInfo CreateTexture(const char *filename, TextureType tex_type)
+TextureInfo CreateTexture(const char *filename, TextureType textureType)
 {
     TextureInfo texInfo;
 
@@ -75,7 +75,7 @@ TextureInfo CreateTexture(const char *filename, TextureType tex_type)
     texInfo.w = optimizedSurface->w;
     texInfo.h = optimizedSurface->h;
     
-    if (tex_type == TextureType::kT2RL) {
+    if (textureType == TextureType::kT2RL) {
         texInfo.texture = CreateTextureFromSurface(optimizedSurface, GL_TEXTURE_2D);
 
         glBindTexture(GL_TEXTURE_2D, texInfo.texture);

@@ -21,13 +21,13 @@ VertexBuffer CreateQuad(const GLuint program)
         { 1.0f,  1.0f, 0.0f, 1.0f, 0.0f},
     };
 
-    GLushort vert_indices[] = { 0, 2, 3, 1 };
+    GLushort vertIndices[] = { 0, 2, 3, 1 };
 
     buffer.program = program;
 
     glGenBuffers(1, &buffer.ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vert_indices), vert_indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertIndices), vertIndices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     glGenVertexArrays(1, &buffer.vao);

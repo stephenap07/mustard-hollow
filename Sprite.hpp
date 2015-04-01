@@ -24,17 +24,17 @@ struct Sprite {
     void setTextureInfo(const TextureInfo &textureInfo);
 
 private:
-    glm::vec2 m_position;
-    Rect m_subRect;
-    VertexBuffer m_vertexBuffer;
-    TextureInfo m_textureInfo;
+    glm::vec2 _position;
+    Rect _subRect;
+    VertexBuffer _vertexBuffer;
+    TextureInfo _textureInfo;
 
-    GLuint m_program;
-    GLuint m_isTextured;
-    glm::vec4 m_color;
+    GLuint _program;
+    GLuint _isTextured;
+    glm::vec4 _color;
 };
 
 /* Creation Code */
-Sprite CreateTexturedSprite(const char *texture_path, Rect rect);
+Sprite CreateTexturedSprite(const char *texturePath, Rect rect);
 
 #endif

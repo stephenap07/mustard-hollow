@@ -9,85 +9,85 @@ Sprite::Sprite()
         ShaderInfo("Triangles.frag", GL_FRAGMENT_SHADER)
     };    
 
-    m_program = CreateProgram(shaders);
-    m_vertexBuffer = CreateQuad(m_program);
-    m_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_isTextured = 1;
-    SetUniform(vertexBuffer().program, UniformType::k1i, "uni_is_textured", 1, static_cast<GLvoid*>(&m_isTextured));
-    SetUniform(m_program, UniformType::k4fv, "uni_color", 1,
-            glm::value_ptr(m_color));
+    _program = CreateProgram(shaders);
+    _vertexBuffer = CreateQuad(_program);
+    _color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    _isTextured = 1;
+    SetUniform(vertexBuffer().program, UniformType::k1i, "uni_is_textured", 1, static_cast<GLvoid*>(&_isTextured));
+    SetUniform(_program, UniformType::k4fv, "uni_color", 1,
+            glm::value_ptr(_color));
     setSubRect(Rect({0.0f, 0.0f, 1.0f, 1.0f}));
 }
 
 Sprite::~Sprite()
 {
     /* TODO: Ownership of resources needs to be handled separately*/
-    glDeleteTextures(1, &m_textureInfo.texture);
-    glDeleteProgram(m_program);
-    glDeleteBuffers(1, &m_vertexBuffer.vbo);
-    glDeleteBuffers(1, &m_vertexBuffer.ebo);
+    glDeleteTextures(1, &_textureInfo.texture);
+    glDeleteProgram(_program);
+    glDeleteBuffers(1, &_vertexBuffer.vbo);
+    glDeleteBuffers(1, &_vertexBuffer.ebo);
 }
 
 const glm::mat4 Sprite::transform() const
 {
     glm::mat4 model(1.0f);
-    model = glm::translate(model, glm::vec3(m_position.x + m_subRect.w/2.0f, m_position.y + m_subRect.h/2.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(_position.x + _subRect.w/2.0f, _position.y + _subRect.h/2.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.0f, -1.0f, 1.0f));
-    model = glm::scale(model, glm::vec3(m_subRect.w/2.0f, m_subRect.h/2.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(_subRect.w/2.0f, _subRect.h/2.0f, 1.0f));
 
     return model;
 }
 
 const glm::vec2 Sprite::position() const
 {
-    return m_position;
+    return _position;
 }
 
 void Sprite::setPosition(glm::vec2 position)
 {
-    m_position = position;
+    _position = position;
 }
 
 void Sprite::setX(float x)
 {
-    m_position.x = x;
+    _position.x = x;
 }
 
 void Sprite::setY(float y)
 {
-    m_position.y = y;
+    _position.y = y;
 }
 
 const Rect Sprite::subRect() const
 {
-    return m_subRect;
+    return _subRect;
 }
 
 void Sprite::setSubRect(const Rect &subRect)
 {
-    m_subRect = subRect;
+    _subRect = subRect;
     glm::vec4 textureXYUV = glm::vec4(
-        m_subRect.x / m_textureInfo.w,
-        m_subRect.y / m_textureInfo.h,
-        m_subRect.w / m_textureInfo.w,
-        m_subRect.h / m_textureInfo.h
+        _subRect.x / _textureInfo.w,
+        _subRect.y / _textureInfo.h,
+        _subRect.w / _textureInfo.w,
+        _subRect.h / _textureInfo.h
         );
-    SetUniform(m_program, UniformType::k4fv, "uni_tex_xy_uv", 1,
+    SetUniform(_program, UniformType::k4fv, "uni_tex_xy_uv", 1,
                glm::value_ptr(textureXYUV));
 }
 
 const VertexBuffer Sprite::vertexBuffer() const
 {
-    return m_vertexBuffer;
+    return _vertexBuffer;
 }
 
 const TextureInfo Sprite::textureInfo() const
 {
-    return m_textureInfo;
+    return _textureInfo;
 }
 
 void Sprite::setTextureInfo(const TextureInfo &textureInfo)
 {
-    m_textureInfo = textureInfo;
-    setSubRect(Rect({0.0f, 0.0f, m_textureInfo.w, m_textureInfo.h}));
+    _textureInfo = textureInfo;
+    setSubRect(Rect({0.0f, 0.0f, _textureInfo.w, _textureInfo.h}));
 }
