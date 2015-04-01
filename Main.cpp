@@ -16,20 +16,20 @@ int main(int argc, char *argv[])
 
     TileMap tileMap;
     tileMap.load();
-    bool do_quit = false;
+    bool doQuit = false;
 
-    while (!do_quit) {
+    while (!doQuit) {
         
         /* Poll for Events */
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
                 case SDL_QUIT:
-                    do_quit = true;
+                    doQuit = true;
                     break;
                 case SDL_KEYUP:
                     if (ev.key.keysym.sym == SDLK_ESCAPE) {
-                        do_quit = true;
+                        doQuit = true;
                     }
                     break;
             }

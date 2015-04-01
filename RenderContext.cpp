@@ -29,32 +29,32 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
 
     IMG_Init(IMG_INIT_JPG|IMG_INIT_PNG|IMG_INIT_TIF);
 
-    m_window = SDL_CreateWindow(
+    _window = SDL_CreateWindow(
         DEFAULT_WINDOW_TITLE, 100, 100,
         screenWidth, screenHeight,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
-    if (m_window == nullptr) {
+    if (_window == nullptr) {
         fprintf(stderr, "Failed to create SDL_Window: %s\n", SDL_GetError());
     }
 
-    m_openGLContext = SDL_GL_CreateContext(m_window);
-    if (m_openGLContext == nullptr) {
+    _openGLContext = SDL_GL_CreateContext(_window);
+    if (_openGLContext == nullptr) {
         fprintf(stderr, "SDL_GL_CreateContext: Failed to created GL context\n");
     }
 
     glewExperimental = GL_TRUE;
-    GLenum glew_error = glewInit();
+    GLenum glewError = glewInit();
 
     /* We can ignore this error https://www.opengl.org/wiki/OpenGL_Loading_Library */
     glGetError();
 
-    if (glew_error != GLEW_OK) {
+    if (glewError != GLEW_OK) {
         fprintf(stderr, "glewInit failed, aborting\n");
     }
 
-    m_world.setProjection(glm::ortho(0.0f, screenWidth, screenHeight, 0.0f));
-    m_world.setView(glm::lookAt(
+    _world.setProjection(glm::ortho(0.0f, screenWidth, screenHeight, 0.0f));
+    _world.setView(glm::lookAt(
         glm::vec3(0, 0, 1), // pos
         glm::vec3(0, 0, 0), // look
         glm::vec3(0, 1, 0)  // up
@@ -66,45 +66,45 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
 
 RenderContext::~RenderContext()
 {
-    SDL_GL_DeleteContext(m_openGLContext);
-    SDL_DestroyWindow(m_window);
+    SDL_GL_DeleteContext(_openGLContext);
+    SDL_DestroyWindow(_window);
     IMG_Quit();
     SDL_Quit();
 }
 
 SDL_Window *RenderContext::window()
 {
-    return m_window;
+    return _window;
 }
 
 RenderWorld *RenderContext::world()
 {
-    return &m_world;
+    return &_world;
 }
 
 const float RenderContext::windowWidth() const
 {
-    return m_width;
+    return _width;
 }
 
 const float RenderContext::windowHeight() const
 {
-    return m_height;
+    return _height;
 }
 
 const std::string RenderContext::windowTitle() const
 {
-    return std::string(SDL_GetWindowTitle(m_window));
+    return std::string(SDL_GetWindowTitle(_window));
 }
 
 void RenderContext::setWindowTitle(const std::string &newTitle)
 {
-    SDL_SetWindowTitle(m_window, newTitle.c_str());
+    SDL_SetWindowTitle(_window, newTitle.c_str());
 }
 
 void RenderContext::swapWindow() const
 {
-    SDL_GL_SwapWindow(m_window);
+    SDL_GL_SwapWindow(_window);
 }
 
 void RenderContext::clearWindow() const
@@ -118,41 +118,41 @@ void RenderContext::clearWindow() const
 
 RenderWorld::RenderWorld()
 {
-    m_projection = glm::ortho(0.0f, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 0.0f);
-    m_view = glm::lookAt(
+    _projection = glm::ortho(0.0f, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 0.0f);
+    _view = glm::lookAt(
         glm::vec3(0, 0, 1), // pos
         glm::vec3(0, 0, 0), // look
         glm::vec3(0, 1, 0)  // up
     );
 }
 
-RenderWorld::RenderWorld(glm::mat4 newProjection, glm::mat4 newView) :m_projection(newProjection), m_view(newView)
+RenderWorld::RenderWorld(glm::mat4 newProjection, glm::mat4 newView) :_projection(newProjection), _view(newView)
 {
 }
 
 const glm::mat4 RenderWorld::projection() const
 {
-    return m_projection;
+    return _projection;
 }
 
 void RenderWorld::setProjection(glm::mat4 newProjection)
 {
-    m_projection = newProjection;
+    _projection = newProjection;
 }
 
 const glm::mat4 RenderWorld::view() const
 {
-    return m_view;
+    return _view;
 }
 
 void RenderWorld::setView(glm::mat4 newView)
 {
-    m_view = newView;
+    _view = newView;
 }
 
 const glm::mat4 RenderWorld::transform() const
 {
-    return m_projection * m_view;
+    return _projection * _view;
 }
 
 void RenderWorld::draw(Sprite *sprite) const

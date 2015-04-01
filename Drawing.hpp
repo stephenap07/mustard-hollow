@@ -8,6 +8,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
+#define GLM_FORCE_RADIANS
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_access.hpp> 
@@ -27,8 +28,8 @@ public:
     void draw(Sprite *sprite) const;
 
 private:
-    glm::mat4 m_projection;
-    glm::mat4 m_view;
+    glm::mat4 _projection;
+    glm::mat4 _view;
 };
 
 class RenderContext {
@@ -50,11 +51,11 @@ public:
 private:
     void init(const float screenWidth, const float screenHeight);
 
-    RenderWorld m_world;
-    SDL_Window *m_window;
-    SDL_GLContext m_openGLContext;
-    float m_height;
-    float m_width;
+    RenderWorld _world;
+    SDL_Window *_window;
+    SDL_GLContext _openGLContext;
+    float _height;
+    float _width;
 };
 
 struct ShaderInfo {
