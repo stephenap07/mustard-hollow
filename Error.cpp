@@ -1,7 +1,6 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 
-#include "Drawing.hpp"
+#include <GL/glew.h>
 
 
 void HandleGLError(GLenum error)
@@ -10,25 +9,25 @@ void HandleGLError(GLenum error)
         case GL_NO_ERROR:
             break;
         case GL_INVALID_ENUM:
-            fprintf(stderr, "GL_ERROR: Invalid enum\n");
+            std::cerr << "GL_ERROR: Invalid enum" << std::endl;
             break;
         case GL_INVALID_VALUE:
-            fprintf(stderr, "GL_ERROR: Invalid value\n");
+            std::cerr << "GL_ERROR: Invalid value" << std::endl;
             break;
         case GL_INVALID_OPERATION:
-            fprintf(stderr, "GL_ERROR: Invalid operation\n");
+            std::cerr << "GL_ERROR: Invalid operation" << std::endl;
             break;
         case GL_INVALID_FRAMEBUFFER_OPERATION:
-            fprintf(stderr, "GL_ERROR: Invalid framebuffer operation\n");
+            std::cerr << "GL_ERROR: Invalid framebuffer operation" << std::endl;
             break;
         case GL_OUT_OF_MEMORY:
-            fprintf(stderr, "GL_ERROR: Out of memory\n");
+            std::cerr << "GL_ERROR: Out of memory" << std::endl;
             break;
         case GL_STACK_UNDERFLOW:
-            fprintf(stderr, "GL_ERROR: Stack underflow\n");
+            std::cerr << "GL_ERROR: Stack underflow" << std::endl;
             break;
         case GL_STACK_OVERFLOW:
-            fprintf(stderr, "GL_ERROR: Stack overflow\n");
+            std::cerr << "GL_ERROR: Stack overflow" << std::endl;
             break;
         default:
             break;

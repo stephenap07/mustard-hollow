@@ -1,13 +1,5 @@
-/**
- * Artificial Intelligence Final Project
- * Stephen Pridham
- *
- */
-
 #include <iostream>
 #include "Mustard.hpp"
-
-using std::vector;
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +12,7 @@ int main(int argc, char *argv[])
 
     while (!doQuit) {
         
-        /* Poll for Events */
+        // Poll for Events
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
             switch (ev.type) {

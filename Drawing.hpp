@@ -17,15 +17,15 @@ struct Sprite;
 
 class RenderWorld {
 public:
-    RenderWorld(glm::mat4 newProjection, glm::mat4 newView);
-    RenderWorld();
+    RenderWorld (glm::mat4 newProjection, glm::mat4 newView);
+    RenderWorld ();
 
-    const glm::mat4 projection() const;
-    void setProjection(glm::mat4 newProjection);
-    const glm::mat4 view() const;
-    void setView(glm::mat4 newView);
-    const glm::mat4 transform() const;
-    void draw(Sprite *sprite) const;
+    const glm::mat4 projection () const;
+    void setProjection (glm::mat4 newProjection);
+    const glm::mat4 view () const;
+    void setView (glm::mat4 newView);
+    const glm::mat4 transform () const;
+    void draw (Sprite *sprite) const;
 
 private:
     glm::mat4 _projection;
@@ -34,22 +34,22 @@ private:
 
 class RenderContext {
 public:
-    RenderContext(float screen_width, float screen_height);
-    RenderContext();
-    ~RenderContext();
+    RenderContext (float screen_width, float screen_height);
+    RenderContext ();
+    ~RenderContext ();
 
-    SDL_Window *window();
-    RenderWorld *world();
-    const std::string windowTitle() const;
-    void setWindowTitle(const std::string &newTitle);
-    void swapWindow() const;
-    void clearWindow() const;
+    SDL_Window *window ();
+    RenderWorld *world ();
+    const std::string windowTitle () const;
+    void setWindowTitle (const std::string &newTitle);
+    void swapWindow () const;
+    void clearWindow () const;
 
-    const float windowWidth() const;
-    const float windowHeight() const;
+    const float windowWidth () const;
+    const float windowHeight () const;
 
 private:
-    void init(const float screenWidth, const float screenHeight);
+    void init (const float screenWidth, const float screenHeight);
 
     RenderWorld _world;
     SDL_Window *_window;
@@ -59,8 +59,8 @@ private:
 };
 
 struct ShaderInfo {
-    ShaderInfo();
-    ShaderInfo(const char *filename, GLenum target);
+    ShaderInfo ();
+    ShaderInfo (const char *filename, GLenum target);
     GLenum type;
     const char *filename;
     GLuint shader;
@@ -92,25 +92,29 @@ enum class TextureType {
 };
 
 
-/** Function Definitions **/
+/// Function Definitions
 
-/* Shader Creation */
-const GLuint CreateShader(const char *filename, const GLenum target);
-const GLuint CreateProgram(const std::vector<ShaderInfo> &shaderInfos);
+// Shader Creation
+const GLuint CreateShader (const char *filename, const GLenum target);
+const GLuint CreateProgram (const std::vector<ShaderInfo> &shaderInfos);
 
-/* Vertex initialization and drawing */
-VertexBuffer CreateQuad(const GLuint program);
-void DrawQuad(const VertexBuffer &buffer);
+/// Vertex initialization and drawing
+VertexBuffer CreateQuad (const GLuint program);
+void DrawQuad (const VertexBuffer &buffer);
 
-/* Uniform handling functions */
-void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei count, GLvoid *data);
+/// Uniform handling functions
+void SetUniform (
+    GLuint program,
+    UniformType type,
+    const GLchar *name,
+    GLsizei count,
+    GLvoid *data);
 
-/* Texture loading */
-TextureInfo CreateTexture(const char *filename, TextureType textureType);
-GLuint CreateTextureFromSurface(SDL_Surface *surface, GLenum target);
+/// Texture loading
+TextureInfo Create2DTexture (const char *filename, TextureType textureType);
+GLuint Create2DTextureFromSurface (SDL_Surface *surface);
 
-/* Error Handling */
-void HandleGLError(GLenum error);
-
+///  Error Handling
+void HandleGLError (GLenum error);
 
 #endif

@@ -1,10 +1,8 @@
 #ifndef H_SCOPE_EXIT_H_
 #define H_SCOPE_EXIT_H_
 
-/**
- * Scope Exit code from http://the-witness.net/news/2012/11/scopeexit-in-c11/
- * TODO: This v.s. unique_ptr
- */
+//  Scope Exit code from http://the-witness.net/news/2012/11/scopeexit-in-c11/
+//  TODO: This v.s. unique_ptr
 
 template <typename F>
 struct ScopeExit {

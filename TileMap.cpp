@@ -3,14 +3,17 @@
 #include "TileMap.h"
 
 
+//==============================================================================
 TileMap::~TileMap()
 {
 }
 
+//==============================================================================
 void TileMap::load()
 {
-    /* Sprite Creation */
-    m_sprite.setTextureInfo(CreateTexture("smw_ground.png", TextureType::kT2RL));
+    m_sprite.setTextureInfo(
+        Create2DTexture("smw_ground.png", TextureType::kT2RL)
+    );
     m_sprite.setSubRect(Rect({ 137.0f, 99.0f, 16.0f, 16.0f }));
     m_sprite.setPosition(glm::vec2(0.0f, 0.0f));
 
@@ -34,6 +37,7 @@ void TileMap::load()
     };
 }
 
+//==============================================================================
 void TileMap::draw(const RenderWorld *world)
 {
     glm::vec2 originalPosition = m_sprite.position();

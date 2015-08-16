@@ -1,18 +1,20 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <cstdio>
-#include <cstdlib>
 
 #include "ScopeExit.hpp"
 #include "Drawing.hpp"
 
 using std::vector;
 
+namespace internal {
+
+//==============================================================================
 inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
 {
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+
     if (status == GL_FALSE) {
         GLint infoLogLen = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
@@ -29,11 +31,14 @@ inline void PrintShaderError(GLuint shader, GLenum target, const char *filename)
             shaderTypeCStr = "fragment";
         }
 
-        std::fprintf(stderr, "Compile failure in %s shader %s:\n %s\n",
-                     shaderTypeCStr, filename, strInfoLog);
+        std::cerr << "Compile failure in "
+                  << shaderTypeCStr
+                  << " file: " << filename
+                  << ", error: " << strInfoLog << std::endl;
     }
 }
 
+//==============================================================================
 inline void PrintShaderLinkError(GLuint program)
 {
     GLint status;
@@ -44,18 +49,18 @@ inline void PrintShaderLinkError(GLuint program)
         GLchar strInfoLog[512];
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
         glGetProgramInfoLog(program, infoLogLength, NULL, strInfoLog);
-        fprintf(stderr, "Linker failure: %s\n", strInfoLog);
+        std::cerr << "Linker failure: " << strInfoLog << std::endl;
     }
 }
 
-/**
- * Compile the shader and return a GLuint
- */
+} // end namespace internal
+
+//==============================================================================
 const GLuint CreateShader(const char *filename, const GLenum target)
 {
     std::ifstream fileStream(filename);
     if (!fileStream.is_open()) {
-        std::cerr << "Woops, file " << filename << " can't be opened" << std::endl;
+        std::cerr << "File " << filename << " can't be opened" << std::endl;
         exit(1);
     }
     std::string str((std::istreambuf_iterator<GLchar>(fileStream)),
@@ -64,27 +69,30 @@ const GLuint CreateShader(const char *filename, const GLenum target)
     GLuint shader = glCreateShader(target);
     glShaderSource(shader, 1, &const_str, NULL);
     glCompileShader(shader);
-    PrintShaderError(shader, target, filename);
+    internal::PrintShaderError(shader, target, filename);
 
     return shader;
 }
 
+//==============================================================================
 const GLuint CreateProgram(const vector<ShaderInfo> &shaderInfos)
 {
     GLuint program = glCreateProgram();
-    for (auto info : shaderInfos) {
+    for (const auto &info : shaderInfos) {
         glAttachShader(program, info.shader);
     }
     glLinkProgram(program);
-    PrintShaderLinkError(program);
+    internal::PrintShaderLinkError(program);
 
     return program;
 }
 
+//==============================================================================
 ShaderInfo::ShaderInfo() :type(0), filename(nullptr), shader(0)
 {
 }
 
+//==============================================================================
 ShaderInfo::ShaderInfo(const char *filename, const GLenum target)
 {
     shader = CreateShader(filename, target);

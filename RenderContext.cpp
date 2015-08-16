@@ -7,23 +7,29 @@ static const char *DEFAULT_WINDOW_TITLE = "Mustard Hollow";
 static const float DEFAULT_SCREEN_WIDTH = 360;
 static const float DEFAULT_SCREEN_HEIGHT = 240;
 
-RenderContext::RenderContext()
+//==============================================================================
+RenderContext::RenderContext ()
 {
     init(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
 }
 
-RenderContext::RenderContext(const float screenWidth, const float screenHeight)
+//==============================================================================
+RenderContext::RenderContext (const float screenWidth, const float screenHeight)
 {
     init(screenWidth, screenHeight);
 }
 
-void RenderContext::init(const float screenWidth, const float screenHeight)
+//==============================================================================
+void RenderContext::init (const float screenWidth, const float screenHeight)
 {
-    /* SDL Initialization */
+    // SDL Initialization
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_PROFILE_MASK,
+        SDL_GL_CONTEXT_PROFILE_CORE
+    );
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
@@ -46,7 +52,8 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
     glewExperimental = GL_TRUE;
     GLenum glewError = glewInit();
 
-    /* We can ignore this error https://www.opengl.org/wiki/OpenGL_Loading_Library */
+    // We can ignore this error
+    // https://www.opengl.org/wiki/OpenGL_Loading_Library
     glGetError();
 
     if (glewError != GLEW_OK) {
@@ -64,7 +71,8 @@ void RenderContext::init(const float screenWidth, const float screenHeight)
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-RenderContext::~RenderContext()
+//==============================================================================
+RenderContext::~RenderContext ()
 {
     SDL_GL_DeleteContext(_openGLContext);
     SDL_DestroyWindow(_window);
@@ -72,42 +80,50 @@ RenderContext::~RenderContext()
     SDL_Quit();
 }
 
-SDL_Window *RenderContext::window()
+//==============================================================================
+SDL_Window *RenderContext::window ()
 {
     return _window;
 }
 
-RenderWorld *RenderContext::world()
+//==============================================================================
+RenderWorld *RenderContext::world ()
 {
     return &_world;
 }
 
-const float RenderContext::windowWidth() const
+//==============================================================================
+const float RenderContext::windowWidth () const
 {
     return _width;
 }
 
-const float RenderContext::windowHeight() const
+//==============================================================================
+const float RenderContext::windowHeight () const
 {
     return _height;
 }
 
-const std::string RenderContext::windowTitle() const
+//==============================================================================
+const std::string RenderContext::windowTitle () const
 {
     return std::string(SDL_GetWindowTitle(_window));
 }
 
-void RenderContext::setWindowTitle(const std::string &newTitle)
+//==============================================================================
+void RenderContext::setWindowTitle (const std::string &newTitle)
 {
     SDL_SetWindowTitle(_window, newTitle.c_str());
 }
 
-void RenderContext::swapWindow() const
+//==============================================================================
+void RenderContext::swapWindow () const
 {
     SDL_GL_SwapWindow(_window);
 }
 
-void RenderContext::clearWindow() const
+//==============================================================================
+void RenderContext::clearWindow () const
 {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glEnable(GL_DEPTH_TEST);
@@ -116,9 +132,15 @@ void RenderContext::clearWindow() const
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-RenderWorld::RenderWorld()
+//==============================================================================
+RenderWorld::RenderWorld ()
 {
-    _projection = glm::ortho(0.0f, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, 0.0f);
+    _projection = glm::ortho(
+        0.0f,
+        DEFAULT_SCREEN_WIDTH,
+        DEFAULT_SCREEN_HEIGHT,
+        0.0f
+    );
     _view = glm::lookAt(
         glm::vec3(0, 0, 1), // pos
         glm::vec3(0, 0, 0), // look
@@ -126,39 +148,56 @@ RenderWorld::RenderWorld()
     );
 }
 
-RenderWorld::RenderWorld(glm::mat4 newProjection, glm::mat4 newView) :_projection(newProjection), _view(newView)
+//==============================================================================
+RenderWorld::RenderWorld (
+    glm::mat4 newProjection,
+    glm::mat4 newView)
+    : _projection(newProjection)
+    , _view(newView)
 {
 }
 
-const glm::mat4 RenderWorld::projection() const
+//==============================================================================
+const glm::mat4 RenderWorld::projection () const
 {
     return _projection;
 }
 
-void RenderWorld::setProjection(glm::mat4 newProjection)
+//==============================================================================
+void RenderWorld::setProjection (glm::mat4 newProjection)
 {
     _projection = newProjection;
 }
 
-const glm::mat4 RenderWorld::view() const
+//==============================================================================
+const glm::mat4 RenderWorld::view () const
 {
     return _view;
 }
 
-void RenderWorld::setView(glm::mat4 newView)
+//==============================================================================
+void RenderWorld::setView (glm::mat4 newView)
 {
     _view = newView;
 }
 
-const glm::mat4 RenderWorld::transform() const
+//==============================================================================
+const glm::mat4 RenderWorld::transform () const
 {
     return _projection * _view;
 }
 
-void RenderWorld::draw(Sprite *sprite) const
+//==============================================================================
+void RenderWorld::draw (Sprite *sprite) const
 {
     glBindTexture(GL_TEXTURE_2D, sprite->textureInfo().texture);
     glm::mat4 model = transform() * sprite->transform();
-    SetUniform(sprite->vertexBuffer().program, UniformType::kMatrix4fv, "uni_model", 1, glm::value_ptr(model));
+    SetUniform(
+        sprite->vertexBuffer().program,
+        UniformType::kMatrix4fv,
+        "uni_model",
+        1,
+        glm::value_ptr(model)
+    );
     DrawQuad(sprite->vertexBuffer());
 }

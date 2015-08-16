@@ -1,11 +1,11 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
 
 #include "Drawing.hpp"
 
 static const bool DEFAULT_IGNORE_UNUSED_UNIFORMS = true;
 
-VertexBuffer CreateQuad(const GLuint program)
+//==============================================================================
+VertexBuffer CreateQuad (const GLuint program)
 {
     VertexBuffer buffer;
 
@@ -27,8 +27,12 @@ VertexBuffer CreateQuad(const GLuint program)
 
     glGenBuffers(1, &buffer.ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertIndices), vertIndices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        sizeof(vertIndices),
+        vertIndices,
+        GL_STATIC_DRAW
+    );
 
     glGenVertexArrays(1, &buffer.vao);
     glBindVertexArray(buffer.vao);
@@ -37,18 +41,32 @@ VertexBuffer CreateQuad(const GLuint program)
     glBindBuffer(GL_ARRAY_BUFFER, buffer.vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vert_quad), vert_quad, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), nullptr);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TextureVertex),
+        nullptr
+    );
+
+    glVertexAttribPointer(
+        1,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        sizeof(TextureVertex),
+        reinterpret_cast<GLvoid*>(3 * sizeof(GLfloat))
+    );
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
     return buffer;
 }
 
-void DrawQuad(const VertexBuffer &buffer)
+//==============================================================================
+void DrawQuad (const VertexBuffer &buffer)
 {
     glUseProgram(buffer.program);
     glBindVertexArray(buffer.vao);
@@ -63,7 +81,13 @@ void DrawQuad(const VertexBuffer &buffer)
     glUseProgram(0);
 }
 
-void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei count, GLvoid *data)
+//==============================================================================
+void SetUniform (
+    GLuint program,
+    UniformType type,
+    const GLchar *name,
+    GLsizei count,
+    GLvoid *data)
 {
     glUseProgram(program);
 
@@ -74,17 +98,27 @@ void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei co
     GLenum error = glGetError();
 
     if (error) {
-        fprintf(stderr, "Error (%d) in shader program (%d), uniform (%s)\n", error, program, name);
+        std::cerr << "Error " << error
+                  << " in shader program (" << program
+                  << "), uniform (" << name << ")"
+                  << std::endl;
     }
 
     if (uniform < 0) {
         if (!DEFAULT_IGNORE_UNUSED_UNIFORMS) {
-            fprintf(stderr, "Invalid value for uniform (%s) in program (%d)\n", name, program);
+            std::cerr << "Invalid value for uniform (" << name 
+                      << ") in program (" << program << ")"
+                      << std::endl;
         }
     } else if (uniform == GL_INVALID_VALUE) {
-        fprintf(stderr, "Invalid program for uniform (%s) in program (%d)\n", name, program);
+        std::cerr << "Invalid value for uniform (" << name 
+                  << ") in program (" << program << ")"
+                  << std::endl;
+
     } else if (uniform == GL_INVALID_OPERATION) {
-        fprintf(stderr, "Invalid program operation for uniform (%s) in program (%d)\n", name, program);
+        std::cerr << "Invalid program operation for uniform (" << name 
+                  << ") in program (" << program << ")"
+                  << std::endl;
     } else {
         switch (type) {
             case UniformType::k1i:
@@ -100,13 +134,23 @@ void SetUniform(GLuint program, UniformType type, const GLchar *name, GLsizei co
                 glUniform2fv(uniform, count, static_cast<GLfloat*>(data));
                 break;
             case UniformType::kMatrix4fv:
-                glUniformMatrix4fv(uniform, count, GL_FALSE, static_cast<GLfloat*>(data));
+                glUniformMatrix4fv(
+                    uniform,
+                    count,
+                    GL_FALSE,
+                    static_cast<GLfloat*>(data)
+                );
                 break;
             case UniformType::kMatrix3x4fv:
-                glUniformMatrix3x4fv(uniform, count, GL_FALSE, static_cast<GLfloat*>(data));
+                glUniformMatrix3x4fv(
+                    uniform,
+                    count,
+                    GL_FALSE,
+                    static_cast<GLfloat*>(data)
+                );
                 break;
             default:
-                fprintf(stderr, "Invalid uniform type\n");
+                std::cerr << "Invalid uniform type" << std::endl;
                 break;
         }
     }
